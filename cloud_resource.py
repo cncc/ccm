@@ -4,6 +4,7 @@
 import boto3
 import warnings
 
+
 def ec2_list():
     print("EC2 list")
     ec2 = boto3.client('ec2')
@@ -19,7 +20,14 @@ def ec2_list():
             profile_name='pc'
         )
         ec2_client = session.client('ec2')
-        dict_of_ec2 = ec2_client.describe_instances().get("Reservations")
+        dict_of_ec2 = ec2_client.describe_instances(
+            Filters=[
+                {
+                    'Name': 'instance-state-name',
+                    'Values': [
+                        'running',
+                    ]
+                }]).get("Reservations")
         ec2list = []
         for reservation in dict_of_ec2:
             for instance in reservation['Instances']:
@@ -38,7 +46,7 @@ def ec2_list():
                     },
                 ],)
                 tags = response['Tags']
-                if have_tag(tags,'Owner') and have_tag(tags,'Project'):
+                if have_tag(tags, 'Owner') and have_tag(tags, 'Project'):
                     print(ec2_instance_name+' has proper tags')
                 else:
                     print(ec2_instance_name+' doesn\'t have proper tags', end=" ")
@@ -49,8 +57,10 @@ def ec2_list():
     print("Total ec2: ", end="")
     print(total_ec2)
 
+
 def split_line(splitter):
     print(splitter*40)
+
 
 def have_tag(dictionary: dict, tag_key: str):
     """Search tag key
@@ -62,6 +72,7 @@ def have_tag(dictionary: dict, tag_key: str):
             return dict_with_owner_key[0]['Value']
     return None
 
+
 def rds_list():
     print("RDS list")
     ec2 = boto3.client('ec2')
@@ -70,7 +81,7 @@ def rds_list():
     # print(regions)
 
     total_rds = 0
-    
+
     for region in regions:
         split_line("-")
         print(region.get("RegionName"))
@@ -86,9 +97,10 @@ def rds_list():
                 total_rds += 1
                 arn = i['DBInstanceArn']
                 # arn:aws:rds:ap-southeast-1::db:mydb
-                tags = rds_client.list_tags_for_resource(ResourceName=arn)['TagList']
+                tags = rds_client.list_tags_for_resource(ResourceName=arn)[
+                    'TagList']
                 # print(arn+" owner is ")
-                if have_tag(tags,'Owner') and have_tag(tags,'Project'):
+                if have_tag(tags, 'Owner') and have_tag(tags, 'Project'):
                     print(arn+' has proper tags')
                 else:
                     print(arn+' doesn\'t have proper tags', end=" ")
@@ -96,10 +108,11 @@ def rds_list():
                 # print(tags)
     print("Total rds: ", end="")
     print(total_rds)
-        
+
 
 # https://github.com/boto/botocore/issues/2705
-warnings.filterwarnings('ignore', category=FutureWarning, module='botocore.client')
+warnings.filterwarnings('ignore', category=FutureWarning,
+                        module='botocore.client')
 ec2_list()
 split_line("=")
 rds_list()

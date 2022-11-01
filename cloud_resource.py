@@ -47,7 +47,8 @@ def ec2_list():
                 ],)
                 tags = response['Tags']
                 if have_tag(tags, 'Owner') and have_tag(tags, 'Project'):
-                    print(ec2_instance_name+' has proper tags')
+                    print(ec2_instance_name+' has proper tags', end=" ")
+                    print(tags)
                 else:
                     print(ec2_instance_name+' doesn\'t have proper tags', end=" ")
                     print(tags)
@@ -77,7 +78,7 @@ def rds_list():
     print("RDS list")
     ec2 = boto3.client('ec2')
     regions = ec2.describe_regions().get('Regions')
-    # regions = [{'Endpoint': 'ec2.us-west-1.amazonaws.com', 'RegionName': 'us-west-1', 'OptInStatus': 'opt-in-not-required'}]
+    # regions = [{'Endpoint': 'ec2.us-west-1.amazonaws.com', 'RegionName': 'ap-south-1', 'OptInStatus': 'opt-in-not-required'}]
     # print(regions)
 
     total_rds = 0
@@ -94,18 +95,20 @@ def rds_list():
         # print(dict_of_rds)
         if dict_of_rds:
             for i in dict_of_rds:
-                total_rds += 1
-                arn = i['DBInstanceArn']
-                # arn:aws:rds:ap-southeast-1::db:mydb
-                tags = rds_client.list_tags_for_resource(ResourceName=arn)[
-                    'TagList']
-                # print(arn+" owner is ")
-                if have_tag(tags, 'Owner') and have_tag(tags, 'Project'):
-                    print(arn+' has proper tags')
-                else:
-                    print(arn+' doesn\'t have proper tags', end=" ")
-                    print(tags)
-                # print(tags)
+                if i['DBInstanceStatus'] == 'available':
+                    total_rds += 1
+                    arn = i['DBInstanceArn']
+                    # arn:aws:rds:ap-southeast-1::db:mydb
+                    tags = rds_client.list_tags_for_resource(ResourceName=arn)[
+                        'TagList']
+                    # print(arn+" owner is ")
+                    if have_tag(tags, 'Owner') and have_tag(tags, 'Project'):
+                        print(arn+' has proper tags', end=" ")
+                        print(tags)
+                    else:
+                        print(arn+' doesn\'t have proper tags', end=" ")
+                        print(tags)
+                    # print(tags)
     print("Total rds: ", end="")
     print(total_rds)
 
